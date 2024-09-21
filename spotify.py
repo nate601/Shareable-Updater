@@ -92,16 +92,19 @@ def GetTopTracks(
     return ret_val
 
 
+load_dotenv("./ENV/spotify")
+env_client_id = os.getenv("client_id")
+env_client_secret = os.getenv("client_secret")
+env_user_auth_secret = os.getenv("user_auth_secret")
+
+
 def GetSharables():
-    load_dotenv("./ENV/spotify")
-    env_client_id = os.getenv("client_id")
-    env_client_secret = os.getenv("client_secret")
     assert env_client_id
     assert env_client_secret
 
     user_auth = GetUserAuthSecret()
     access_token = RequestAccessToken(env_client_id, env_client_secret, user_auth)
-    return GetTopTracks(access_token)
+    return GetTopTracks(access_token, limit=3)
 
 
 if __name__ == "__main__":
