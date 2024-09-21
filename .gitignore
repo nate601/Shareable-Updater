@@ -132,6 +132,9 @@ ENV/
 env.bak/
 venv.bak/
 
+sharables.json
+updatableSharables.md
+
 # Spyder project settings
 .spyderproject
 .spyproject
