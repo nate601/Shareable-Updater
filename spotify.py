@@ -38,8 +38,8 @@ def RequestAccessToken(client_id: str, client_secret: str, auth_code: str) -> st
         + base64.b64encode(bytes(f"{client_id}:{client_secret}", "utf-8")).decode(),
     }
     resp = httpx.post(baseurl, data=o, headers=head)
-    print(resp.status_code)
-    print(resp.content)
+    # print(resp.status_code)
+    # print(resp.content)
     resp = resp.json()
     assert resp["access_token"]
     refresh_token = resp["refresh_token"]
@@ -56,18 +56,18 @@ def RefreshAccessToken(rfsh_token: str, client_id: str, client_secret: str) -> s
     }
     baseurl = "https://accounts.spotify.com/api/token"
     resp = httpx.post(baseurl, data=o, headers=h)
-    print(resp.status_code)
-    print(resp)
+    # print(resp.status_code)
+    # print(resp)
     assert resp.status_code == 200
     resp = resp.json()
-    print(resp)
+    # print(resp)
     if "refresh_token" in resp:
         SetRefreshToken(resp["refresh_token"])
     return resp["access_token"]
 
 
 def SetRefreshToken(newwRefreshToken: str):
-    set_key(".env", "refresh_token", newwRefreshToken)
+    set_key("./ENV/spotify", "refresh_token", newwRefreshToken)
 
 
 def GetTopTracks(
@@ -81,12 +81,31 @@ def GetTopTracks(
     head = {"Authorization": f"Bearer {access_token}"}
     resp = httpx.get(tracks_endpoint, params=o, headers=head)
     resp = resp.json()
+    ret_val = []
     for i in resp["items"]:
-        print(f"{i['name']} by {i['artists'][0]['name']}")
+        ret_val.append(
+            {
+                "name": f"{i['name']} by {i['artists'][0]['name']}",
+                "link": f"{i['external_urls']['spotify']}",
+            }
+        )
+    return ret_val
+
+
+def GetSharables():
+    load_dotenv("./ENV/spotify")
+    env_client_id = os.getenv("client_id")
+    env_client_secret = os.getenv("client_secret")
+    assert env_client_id
+    assert env_client_secret
+
+    user_auth = GetUserAuthSecret()
+    access_token = RequestAccessToken(env_client_id, env_client_secret, user_auth)
+    return GetTopTracks(access_token)
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv("./ENV/spotify")
     env_client_id = os.getenv("client_id")
     env_client_secret = os.getenv("client_secret")
     assert env_client_id
@@ -95,4 +114,5 @@ if __name__ == "__main__":
 
     user_auth = GetUserAuthSecret()
     access_token = RequestAccessToken(env_client_id, env_client_secret, user_auth)
-    GetTopTracks(access_token)
+    retVal = GetTopTracks(access_token)
+    print(retVal)
