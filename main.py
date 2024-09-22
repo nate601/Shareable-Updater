@@ -1,6 +1,5 @@
 import spotify
 import steam
-import pendulum
 import json
 
 if __name__ == "__main__":
