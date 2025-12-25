@@ -1,9 +1,10 @@
-import os
-from typing import Literal
-import urllib.parse
 import base64
-from dotenv import load_dotenv, dotenv_values, set_key
+import os
+import urllib.parse
+from typing import Literal
+
 import httpx
+from dotenv import dotenv_values, load_dotenv, set_key
 
 
 def GetUserAuthSecret():
@@ -12,7 +13,7 @@ def GetUserAuthSecret():
             "client_id": env_client_id,
             "response_type": "code",
             "scope": "user-top-read",
-            "redirect_uri": "http://localhost:3000",
+            "redirect_uri": "http://127.0.0.1:3000",
         }
         baseurl = "https://accounts.spotify.com/authorize?"
         print("Please go to the below URL to obtain user-top-read scope grant.")
@@ -30,7 +31,7 @@ def RequestAccessToken(client_id: str, client_secret: str, auth_code: str) -> st
     o = {
         "grant_type": "authorization_code",
         "code": auth_code,
-        "redirect_uri": "http://localhost:3000",
+        "redirect_uri": "http://127.0.0.1:3000",
     }
     head = {
         "content-type": "application/x-www-form-urlencoded",
