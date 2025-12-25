@@ -1,11 +1,14 @@
 import os
-from dotenv import load_dotenv
+
 import httpx
+from dotenv import load_dotenv
 
 envFile = "./ENV/steam"
 load_dotenv(envFile)
 api_key = os.getenv("steam_web_api_key")
 steamid = os.getenv("steamid")
+assert api_key
+assert steamid
 
 
 def GetLinkFromAppId(appId: int):
