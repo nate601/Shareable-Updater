@@ -77,9 +77,17 @@ class Series:
         booksResponse = resp.json()
         volumes = []
         for book in booksResponse:
+            bookName = book.get("name")
+            if bookName.isdigit():
+                if len(booksResponse) > 1:
+                    bookName = f"{self.name} - Book {bookName}"
+                else:
+                    bookName = self.name
+            elif bookName[1:].isdigit():
+                bookName = self.name
             curVol = Volume(
                 id=book["id"],
-                name=book["name"],
+                name=bookName,
                 pages=book["pages"],
                 pages_read=book["pagesRead"],
                 completed=book["pagesRead"] >= book["pages"],
@@ -110,6 +118,11 @@ def GetReadSeries() -> list[Series]:
         FilterStatement(0, 19, "1"),  ## Series in the "Books" collection
     ]
     return SearchSeries(fss)
+
+
+def GetReadVolumes() -> list[Volume]:
+    series = GetSeriesWithProgress()
+    return [v for s in series for v in s.volumes if v.completed]
 
 
 def GetSeriesWithProgress() -> list[Series]:
@@ -160,7 +173,5 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 if __name__ == "__main__":
     print("###On Deck###")
     print(GetOnDeckSeries())
-    print("###Series with Progress###")
-    print(GetSeriesWithProgress())
-    print("###Read Series###")
-    print(GetReadSeries())
+    print("###Read Volumes###")
+    print(GetReadVolumes())
