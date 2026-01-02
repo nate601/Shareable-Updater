@@ -53,7 +53,7 @@ class Series:
         resp = httpx.get(SERIES_DATA_ENDPOINT + str(id), headers=HEADERS)
         resp = resp.json()
         self.name = resp.get("name")
-        self.pages = resp.get("name")
+        self.pages = resp.get("pages")
         self.pages_read = resp.get("pagesRead")
         self.metadata = self.GetSeriesMetadata()
         self.volumes = self.GetSeriesVolumes() or []
@@ -96,7 +96,7 @@ def GetSharables():
             "name": serie.name,
             "link": serie.GetSeriesMetadata().link,
             "summary": serie.GetSeriesMetadata().summary,
-            "completed": serie.pages <= serie.pages_read,
+            "completed": int(serie.pages) <= int(serie.pages_read),
             "completion_progress": serie.pages_read / serie.pages,
         }
         retVal.append(o)
