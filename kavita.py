@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+from pprint import pprint
 
 import httpx
 
@@ -31,6 +33,7 @@ class Volume:
     pages_read: int
     completed: bool
     word_count: int
+    last_read_date: datetime
 
 
 @dataclass
@@ -48,16 +51,18 @@ class Series:
     pages_read: int
     metadata: SeriesMetadata | None
     volumes: list[Volume]
+    last_read_date: datetime
 
     def __init__(self, id: int):
         self.id = id
         resp = httpx.get(SERIES_DATA_ENDPOINT + str(id), headers=HEADERS)
         resp = resp.json()
-        self.name = resp.get("name")
+        self.name = resp.get("localizedName") or resp.get("name")
         self.pages = resp.get("pages")
         self.pages_read = resp.get("pagesRead")
         self.metadata = self.GetSeriesMetadata()
         self.volumes = self.GetSeriesVolumes() or []
+        self.last_read_date = datetime.fromisoformat(resp.get("latestReadDate"))
 
     def GetSeriesMetadata(self):
         resp = httpx.get(
@@ -85,6 +90,11 @@ class Series:
                     bookName = self.name
             elif bookName[1:].isdigit():
                 bookName = self.name
+            lrds = [
+                datetime.fromisoformat(c.get("lastReadingProgress"))
+                for c in book.get("chapters")
+            ]
+            lrds.sort()
             curVol = Volume(
                 id=book["id"],
                 name=bookName,
@@ -92,6 +102,7 @@ class Series:
                 pages_read=book["pagesRead"],
                 completed=book["pagesRead"] >= book["pages"],
                 word_count=book["wordCount"],
+                last_read_date=max(lrds),
             )
             volumes.append(curVol)
         return volumes
@@ -122,7 +133,11 @@ def GetReadSeries() -> list[Series]:
 
 def GetReadVolumes() -> list[Volume]:
     series = GetSeriesWithProgress()
-    return [v for s in series for v in s.volumes if v.completed]
+    vol = sorted(
+        [v for s in series for v in s.volumes if v.completed],
+        key=lambda p: p.name,
+    )
+    return sorted(vol, key=lambda p: p.last_read_date.date(), reverse=True)
 
 
 def GetSeriesWithProgress() -> list[Series]:
@@ -172,6 +187,6 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 
 if __name__ == "__main__":
     print("###On Deck###")
-    print(GetOnDeckSeries())
+    pprint(GetOnDeckSeries())
     print("###Read Volumes###")
-    print(GetReadVolumes())
+    pprint(GetReadVolumes())
