@@ -11,6 +11,7 @@ AUTH_ENDPOINT = "https://kavita.n8.pub/api/Plugin/authenticate"
 SERIES_VOLUMES_ENDPOINT = "https://kavita.n8.pub/api/Series/volumes"
 SERIES_METADATA_ENDPOINT = "https://kavita.n8.pub/api/Series/metadata"
 SERIES_DATA_ENDPOINT = "https://kavita.n8.pub/api/Series/"
+SERIES_SEARCH_ENDPOINT = "https://kavita.n8.pub/api/Series/v2"
 # TODO: update python and use template literal
 
 
@@ -103,10 +104,43 @@ def GetSharables():
     return retVal
 
 
-def GetReadSeries() -> list[Series]: ...
+def GetReadSeries() -> list[Series]:
+    fss = [
+        FilterStatement(1, 20, "98"),  # series with 99% progress or greater
+        FilterStatement(0, 19, "1"),  ## Series in the "Books" collection
+    ]
+    return SearchSeries(fss)
 
 
-def GetInProgressSeries() -> list[Series]: ...
+def GetSeriesWithProgress() -> list[Series]:
+    fss = [
+        FilterStatement(1, 20, "0"),  ## Series with >= 1 percent of progress
+        FilterStatement(0, 19, "1"),  ## Series in the "Books" collection
+    ]
+    return SearchSeries(fss)
+
+
+@dataclass
+class FilterStatement:
+    comparison: int
+    field: int
+    value: str
+
+
+def SearchSeries(sortFields: list[FilterStatement]) -> list[Series]:
+    o = {
+        "combination": 1,
+        "limitTo": 0,
+        "sortOptions": {
+            "isAscending": False,
+            "sortField": 7,
+        },  ## Sort by most recently read (with most recent series at the top)
+        "statements": [k.__dict__ for k in sortFields],
+    }
+    resp = httpx.post(SERIES_SEARCH_ENDPOINT, headers=HEADERS, json=o)
+    assert resp.status_code == 200
+    resp = resp.json()
+    return [Series(r.get("id")) for r in resp]
 
 
 def GetOnDeckSeries() -> list[Series]:
@@ -126,7 +160,7 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 if __name__ == "__main__":
     print("###On Deck###")
     print(GetOnDeckSeries())
-    print("###In Progress###")
-    print(GetInProgressSeries())
+    print("###Series with Progress###")
+    print(GetSeriesWithProgress())
     print("###Read Series###")
     print(GetReadSeries())
