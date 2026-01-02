@@ -4,7 +4,9 @@ import urllib.parse
 from typing import Literal
 
 import httpx
-from dotenv import dotenv_values, load_dotenv, set_key
+
+# from dotenv import dotenv_values, load_dotenv, set_key
+from setec_secrets import GetVendorSecret, SetVendorSecret
 
 
 def GetUserAuthSecret():
@@ -23,33 +25,13 @@ def GetUserAuthSecret():
 
 
 def RequestAccessToken(client_id: str, client_secret: str, auth_code: str) -> str:
-    if os.getenv("refresh_token"):
-        return RefreshAccessToken(
-            os.getenv("refresh_token") or "", client_id, client_secret
-        )
-    baseurl = "https://accounts.spotify.com/api/token"
-    o = {
-        "grant_type": "authorization_code",
-        "code": auth_code,
-        "redirect_uri": "http://127.0.0.1:3000",
-    }
-    head = {
-        "content-type": "application/x-www-form-urlencoded",
-        "Authorization": "Basic "
-        + base64.b64encode(bytes(f"{client_id}:{client_secret}", "utf-8")).decode(),
-    }
-    resp = httpx.post(baseurl, data=o, headers=head)
-    # print(resp.status_code)
-    # print(resp.content)
-    resp = resp.json()
-    assert resp["access_token"]
-    refresh_token = resp["refresh_token"]
-    SetRefreshToken(refresh_token)
-    return resp["access_token"]
+    return RefreshAccessToken(
+        GetVendorSecret("spotify", "refresh_token"), client_id, client_secret
+    )
 
 
-def RefreshAccessToken(rfsh_token: str, client_id: str, client_secret: str) -> str:
-    o = {"grant_type": "refresh_token", "refresh_token": rfsh_token}
+def RefreshAccessToken(refresh_token: str, client_id: str, client_secret: str) -> str:
+    o = {"grant_type": "refresh_token", "refresh_token": refresh_token}
     k = base64.b64encode(bytes(f"{client_id}:{client_secret}", "utf-8")).decode()
     h = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -57,18 +39,18 @@ def RefreshAccessToken(rfsh_token: str, client_id: str, client_secret: str) -> s
     }
     baseurl = "https://accounts.spotify.com/api/token"
     resp = httpx.post(baseurl, data=o, headers=h)
-    # print(resp.status_code)
-    # print(resp)
+    print(resp.status_code)
+    print(resp.content)
     assert resp.status_code == 200
     resp = resp.json()
-    # print(resp)
     if "refresh_token" in resp:
         SetRefreshToken(resp["refresh_token"])
     return resp["access_token"]
 
 
-def SetRefreshToken(newwRefreshToken: str):
-    set_key("./ENV/spotify", "refresh_token", newwRefreshToken)
+def SetRefreshToken(newRefreshToken: str):
+    print("New refresh token from Spotify")
+    SetVendorSecret("spotify", "refresh_token", newRefreshToken)
 
 
 def GetTopTracks(
@@ -93,30 +75,24 @@ def GetTopTracks(
     return ret_val
 
 
-load_dotenv("./ENV/spotify")
-env_client_id = os.getenv("client_id")
-env_client_secret = os.getenv("client_secret")
-env_user_auth_secret = os.getenv("user_auth_secret")
+env_client_id = GetVendorSecret("spotify", "client_id")
+env_client_secret = GetVendorSecret("spotify", "client_secret")
+env_user_auth_secret = GetVendorSecret("spotify", "user_auth_secret")
+assert env_client_id
+assert env_client_secret
+assert env_user_auth_secret
 
 
 def GetSharables():
-    assert env_client_id
-    assert env_client_secret
-
-    user_auth = GetUserAuthSecret()
-    access_token = RequestAccessToken(env_client_id, env_client_secret, user_auth)
+    access_token = RequestAccessToken(
+        env_client_id, env_client_secret, env_user_auth_secret
+    )
     return GetTopTracks(access_token, limit=3)
 
 
 if __name__ == "__main__":
-    load_dotenv("./ENV/spotify")
-    env_client_id = os.getenv("client_id")
-    env_client_secret = os.getenv("client_secret")
-    assert env_client_id
-    assert env_client_secret
-    env_user_auth_secret = os.getenv("user_auth_secret")
-
-    user_auth = GetUserAuthSecret()
-    access_token = RequestAccessToken(env_client_id, env_client_secret, user_auth)
+    access_token = RequestAccessToken(
+        env_client_id, env_client_secret, env_user_auth_secret
+    )
     retVal = GetTopTracks(access_token)
     print(retVal)

@@ -1,12 +1,9 @@
-import os
-
 import httpx
-from dotenv import load_dotenv
 
-envFile = "./ENV/steam"
-load_dotenv(envFile)
-api_key = os.getenv("steam_web_api_key")
-steamid = os.getenv("steamid")
+from setec_secrets import GetVendorSecret
+
+api_key = GetVendorSecret("steam", "steam_web_api_key")
+steamid = GetVendorSecret("steam", "steamid")
 assert api_key
 assert steamid
 
