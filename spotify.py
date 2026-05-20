@@ -39,8 +39,8 @@ def RefreshAccessToken(refresh_token: str, client_id: str, client_secret: str) -
     }
     baseurl = "https://accounts.spotify.com/api/token"
     resp = httpx.post(baseurl, data=o, headers=h)
-    print(resp.status_code)
-    print(resp.content)
+    # print(resp.status_code)
+    # print(resp.content)
     assert resp.status_code == 200
     resp = resp.json()
     if "refresh_token" in resp:
