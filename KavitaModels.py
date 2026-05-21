@@ -38,12 +38,35 @@ HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 client = httpx.Client(headers=HEADERS)
 
 
+class Chapter(BaseModel):
+    id: int
+    sortOrder: int
+    lastReadingProgressUtc: datetime | None
+
+    @computed_field
+    @cached_property
+    def lastReadingProgressLocal(self) -> datetime | None:
+        if self.lastReadingProgressUtc:
+            return datetime.astimezone(self.lastReadingProgressUtc)
+        return None
+
+    @field_validator("lastReadingProgressUtc", mode="after")
+    @classmethod
+    def validate_dttm(cls, input: datetime | None) -> datetime | None:
+        if input is None:
+            return None
+        if input == datetime(1, 1, 1, 0, 0):
+            return None
+        return input
+
+
 class Volume(BaseModel):
     id: int
     name: str | None
     pages: int
     pagesRead: int
     wordCount: int
+    chapters: list[Chapter]
 
     @computed_field
     @cached_property
