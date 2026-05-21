@@ -1,4 +1,3 @@
-from rich import print
 from KavitaModels import (
     Series,
     Volume,
@@ -17,7 +16,7 @@ def GetSharables():
             "link": serie.metadata.webLinks[0],
             "summary": serie.metadata.summary,
             "completed": serie.completed,
-            "completion_progress": serie.pagesRead / serie.pages,
+            "completion_progress": serie.completion_progress,
         }
         retVal.append(o)
     return retVal
@@ -45,6 +44,8 @@ def GetSeriesWithProgress() -> list[Series]:
 
 
 if __name__ == "__main__":
+    from rich import print
+
     print("###On Deck###")
     print(GetOnDeckSeries())
     print("###Read Volumes###")

@@ -116,6 +116,11 @@ class Series(BaseModel):
     def completed(self) -> bool:
         return self.pagesRead >= self.pages
 
+    @computed_field
+    @cached_property
+    def completion_progress(self) -> float:
+        return self.pagesRead / self.pages
+
 
 def GetSeries(id: int) -> Series:
     resp = client.get(SERIES_DATA_ENDPOINT + str(id))
