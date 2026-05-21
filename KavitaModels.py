@@ -40,6 +40,7 @@ client = httpx.Client(headers=HEADERS)
 
 class Chapter(BaseModel):
     id: int
+    titleName: str
     sortOrder: int
     lastReadingProgressUtc: datetime | None
 
@@ -72,6 +73,30 @@ class Volume(BaseModel):
     @cached_property
     def completed(self) -> bool:
         return self.pagesRead >= self.pages
+
+    @computed_field
+    @cached_property
+    def lastReadingProgressUtc(self) -> datetime | None:
+        return max(
+            [
+                chapter.lastReadingProgressUtc
+                for chapter in self.chapters
+                if chapter.lastReadingProgressUtc is not None
+            ],
+            default=None,
+        )
+
+    @computed_field
+    @cached_property
+    def lastReadingProgressLocal(self) -> datetime | None:
+        return max(
+            [
+                chapter.lastReadingProgressLocal
+                for chapter in self.chapters
+                if chapter.lastReadingProgressLocal is not None
+            ],
+            default=None,
+        )
 
     @field_validator("name", mode="before")
     @classmethod

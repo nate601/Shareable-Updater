@@ -1,3 +1,5 @@
+from KavitaModels import Volume
+from pydantic import TypeAdapter
 import json
 
 import kavita
@@ -20,4 +22,15 @@ if __name__ == "__main__":
         for book in bookSharables:
             f.write(f" * ({book['name']})[{book['link']}]\n")
     with open("sharables.json", "w") as f:
-        json.dump({"steam": gameSharables, "spotify": songSharables, "kavita": bookSharables}, f)
+        json.dump(
+            {"steam": gameSharables, "spotify": songSharables, "kavita": bookSharables},
+            f,
+        )
+    with open("completedBooks.json", "wb") as f:
+        ta = TypeAdapter(list[Volume]).dump_json(
+            sorted(
+                kavita.GetReadVolumes(),
+                key=lambda volume: volume.lastReadingProgressLocal,
+            )
+        )
+        f.write(ta)

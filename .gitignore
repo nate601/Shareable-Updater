@@ -134,6 +134,7 @@ venv.bak/
 
 sharables.json
 updatableSharables.md
+completedBooks.json
 
 # Spyder project settings
 .spyderproject
