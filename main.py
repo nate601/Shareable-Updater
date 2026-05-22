@@ -1,4 +1,4 @@
-from KavitaModels import Volume
+from KavitaModels import Volume, Series
 from pydantic import TypeAdapter
 import json
 
@@ -27,10 +27,10 @@ if __name__ == "__main__":
             f,
         )
     with open("completedBooks.json", "wb") as f:
-        ta = TypeAdapter(list[Volume]).dump_json(
+        ta = TypeAdapter(list[dict[str, Volume | Series]]).dump_json(
             sorted(
                 kavita.GetReadVolumes(),
-                key=lambda volume: volume.lastReadingProgressLocal,
+                key=lambda data: data["volume"].lastReadingProgressLocal,
             )
         )
         f.write(ta)

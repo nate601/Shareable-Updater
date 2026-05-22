@@ -31,9 +31,9 @@ def GetReadSeries() -> list[Series]:
     )
 
 
-def GetReadVolumes() -> list[Volume]:
+def GetReadVolumes() -> list[dict[str, Volume | Series]]:
     series = GetSeriesWithProgress()
-    vol = [v for s in series for v in s.volumes if v.completed]
+    vol = [{"volume": v, "series": s} for s in series for v in s.volumes if v.completed]
     return vol
 
 
