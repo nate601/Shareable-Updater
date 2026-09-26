@@ -41,7 +41,7 @@ client = httpx.Client(headers=HEADERS)
 class Chapter(BaseModel):
     id: int
     titleName: str
-    sortOrder: int
+    sortOrder: float
     lastReadingProgressUtc: datetime | None
 
     @computed_field
