@@ -18,12 +18,20 @@ def GetVendorSecret(vendor, key) -> str:
     return base64.b64decode(encoded_val).decode("ascii")
 
 
-def SetVendorSecret(vendor: str, key: str, new_val: str) -> str:
+def SetVendorSecret(vendor: str, key: str, new_val: str) -> None:
+    encoded_val = base64.b64encode(bytes(new_val, "utf-8")).decode("ascii")
+    j = {"Name": f"vendor/{vendor}/{key}", "Value": encoded_val}
     resp = client.request(
         "POST",
-        f"{server_root}/api/get",
-        json={"Name": f"vendor/{vendor}/{key}", "Value": new_val},
+        f"{server_root}/api/put",
+        json=j,
     )
-    print(resp.status_code)
     assert resp.status_code == 200
-    return resp.content.decode("ascii")
+    version = int(resp.content.decode())
+    print(f"Version Number: {version}")
+    resp = client.request(
+        "POST",
+        f"{server_root}/api/activate",
+        json={"Name": f"vendor/{vendor}/{key}", "Version": version},
+    )
+    assert resp.status_code == 200
