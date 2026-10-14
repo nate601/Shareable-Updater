@@ -63,7 +63,7 @@ class Chapter(BaseModel):
 
 class Volume(BaseModel):
     id: int
-    name: str | None
+    name: str
     pages: int
     pagesRead: int
     wordCount: int
@@ -139,7 +139,8 @@ class SeriesMetadata(BaseModel):
 
 class Series(BaseModel):
     id: int
-    name: str = Field(validation_alias=AliasChoices("localizedName", "name"))
+    name: str = Field(validation_alias=AliasChoices("name"))
+    localizedName: str = Field(validation_alias=AliasChoices("localizedName"))
     pages: int
     pagesRead: int
     latestReadDate: datetime
@@ -156,7 +157,15 @@ class Series(BaseModel):
         resp = client.get(SERIES_VOLUMES_ENDPOINT, params={"seriesId": self.id})
         resp = resp.json()
         return [
-            Volume.model_validate(k, context={"seriesName": self.name}) for k in resp
+            Volume.model_validate(
+                k,
+                context={
+                    "seriesName": (
+                        self.localizedName if self.localizedName != "" else self.name
+                    )
+                },
+            )
+            for k in resp
         ]
 
     @computed_field
